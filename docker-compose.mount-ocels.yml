@@ -1,0 +1,6 @@
+version: "3.9"
+
+services:
+  fastapi:
+    volumes:
+      - ${OCEL_MOUNT_PATH}:/ocpq/fastapi/data/mounted:ro

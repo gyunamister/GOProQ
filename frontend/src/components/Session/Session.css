@@ -1,0 +1,121 @@
+.Content {
+    padding: 0 1rem 2rem 1rem;
+    margin: 2rem auto;
+
+    max-width: 95vw;
+    background-color: white;
+
+    border-style: solid;
+    border-radius: 1rem;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.EventLogTable-LogSourceIcon {
+    margin-right: 0.5rem;
+
+    aspect-ratio: 1/1;
+    width: 1.2rem;
+}
+
+.EventLogTable-DeleteButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    /*aspect-ratio: 1/1;*/
+
+    transition: background-color 0.2s ease-in;
+
+    background-color: rgba(0, 0, 0, 0);
+    border-style: none;
+}
+
+.EventLogTable-DeleteButton>svg {
+    aspect-ratio: 1/1;
+    height: 1rem;
+}
+
+.EventLogTable-DeleteButton:hover {
+    color: #E53935;
+}
+
+.LogUploader-FileSelect {
+    display: block;
+    border-style: none;
+
+    padding-bottom: 0.2rem;
+
+    cursor: pointer;
+
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 0.5);
+    transition: box-shadow 100ms ease-in;
+}
+
+.LogUploader-FileSelect:hover {
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 0.8);
+}
+
+.LogUploader-FileSelect>label {
+    --size: 1rem;
+
+    line-height: var(--size);
+    font-size: var(--size);
+
+    cursor: pointer;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.LogUploader-FileSelect>label>svg {
+    height: var(--size);
+    width: var(--size);
+    margin-right: 0.5rem;
+}
+
+.EventLogList {
+    margin: auto;
+    width: 100%;
+    min-width: 30cm;
+    /*height: 50vh;*/
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.EventLogList-Buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    padding-left: calc(0.5rem + 1px);
+}
+
+.EventLogList-SelectButton {
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 0.5);
+    transition: box-shadow 100ms ease-in;
+
+    font-size: 1rem;
+    line-height: 1rem;
+
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.EventLogList-SelectButton:hover {
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 0.8);
+}
+
+.EventLogList-SelectButton>svg {
+    margin-right: 0.5rem;
+
+    height: 1rem;
+    width: 1rem;
+}

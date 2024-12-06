@@ -1,0 +1,44 @@
+{
+    "query": {
+        "data": {
+            "nodes": [
+                {
+                    "id": "0",
+                    "type": "activityNode",
+                    "data": {
+                        "label": [
+                            "Confirm Order"
+                        ],
+                        "beforeContent": "INIT",
+                        "objectType": "",
+                        "pContent": "\u2265 1",
+                        "perfContent": "",
+                        "query": {
+                            "query": "isStart",
+                            "event_activity": [
+                                "Confirm Order"
+                            ],
+                            "object_type": "",
+                            "quantifier": "ANY",
+                            "p": 1,
+                            "p_operator": "gte",
+                            "p_mode": "absolute",
+                            "boolean_operator": "",
+                            "node_metric": "",
+                            "node_metric_operator": "gte",
+                            "node_metric_value": 0
+                        }
+                    },
+                    "position": {
+                        "x": 300,
+                        "y": 300
+                    }
+                }
+            ],
+            "edges": []
+        }
+    },
+    "file_path": "data/order_process.jsonocel",
+    "exact": true,
+    "single": true
+}

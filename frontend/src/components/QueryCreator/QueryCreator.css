@@ -1,0 +1,252 @@
+.QueryCreator {
+    font-family: sans-serif;
+    text-align: center;
+    display: flex;
+    width: 91vw;
+    height: 100vh;
+    background: white;
+}
+
+.curved-message {
+    position: relative;
+    width: 10rem;
+    height: 5rem;
+    background: white;
+    border: 0.18rem solid #1a192b;
+    border-radius: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.curved-message:before {
+    content: attr(data-content);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 5rem;
+    height: 30px;
+    background: lightblue;
+    position: absolute;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+    top: -2.95rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.or_button {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+    background: white;
+    border: 0.18rem solid #1a192b;
+    border-radius: 1rem;
+    transform: rotate(45deg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.or_content {
+    transform: rotate(-45deg);
+}
+
+.or_text2 {
+    position: relative;
+}
+
+.or_text {
+    position: relative;
+    bottom: 1rem;
+}
+
+.diamond {
+    width: 0;
+    height: 0;
+    border: 50px solid transparent;
+    border-bottom-color: red;
+    position: relative;
+    top: -50px;
+}
+
+.diamond:after {
+    content: '';
+    position: absolute;
+    left: -50px;
+    top: 50px;
+    width: 0;
+    height: 0;
+    border: 50px solid transparent;
+    border-top-color: red;
+}
+
+.vertical-line {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+
+}
+
+.vertical-line::before {
+    content: "";
+    width: 0.1rem;
+    color:  #1a192b;
+    height: 100%;
+    background-color: black;
+    position: absolute;
+    top: 101%;
+    right: 49%;
+}
+
+.vertical-line span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+    top: 120%;
+    left: 53%;
+}
+
+.vertical-line p {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+    width: 6rem;
+    top: 82%;
+    right: 53%;
+}
+
+.vertical-line-red {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+
+}
+
+.vertical-line-red::before {
+    content: "";
+    width: 0.18rem;
+    color:  #1a192b;
+    height: 100%;
+    background-color: red;
+    position: absolute;
+    top: 101%;
+    right: 49%;
+}
+
+.vertical-line-red span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+    top: 120%;
+    left: 53%;
+}
+
+.circle {
+    position: absolute;
+    background: white;
+    width: 5rem;
+    height: 5rem;
+    top: 161%;
+    border-radius: 50%;
+    color: #000;
+    border: 0.18rem solid #1a192b;
+    text-align: center;
+}
+
+.circle:before {
+    content: attr(data-content);
+    line-height: 4.7rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.save__controls {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 4;
+    font-size: 12px;
+}
+
+.save__controls button {
+    margin-left: 5px;
+}
+
+.edgebutton {
+    width: 20px;
+    height: 20px;
+    background: #eee;
+    border: 1px solid #fff;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.edgebutton:hover {
+    box-shadow: 0 0 6px 2px rgba(0, 0, 0, 0.08);
+}
+
+.edgebutton-foreignobject div {
+    background: transparent;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+}
+
+.rectangle {
+    height: 8rem;
+    width: 8rem;
+    color: black;
+    background-color: white;
+    border-radius: 1rem;
+    border: 0.18rem solid #1a192b;
+    display: flex;
+    font-size: 0.5rem;
+    justify-content:center;
+    align-items: center;
+    text-overflow: ellipsis;
+    //overflow: hidden;
+    //overflow-wrap: break-word;
+    //white-space: nowrap;
+}
+
+.oval {
+    background-color: white;
+    width: 15rem;
+    height: 7.5rem;
+    margin: 5px auto;
+    border-radius: 50%;
+    border: 0.18rem solid #1a192b;
+    color: black;
+    font-size: 1.6em;
+}
+
+.oval:before {
+    content: attr(data-content);
+    display: flex;
+    z-index: -100;
+    justify-content: center;
+    align-items: center;
+    width: 10rem;
+    height: 4rem;
+    background: lightblue;
+    position: absolute;
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+    top: -4.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(50%) rotate(0deg);
+}
+
+.oval-text {
+    text-align: center;
+    margin:0;
+    padding: 14% 0;
+}

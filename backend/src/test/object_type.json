@@ -1,0 +1,29 @@
+{
+    "nodes": [
+        {
+            "id": "1",
+            "type": "objectTypeNode",
+            "data": {
+                "label": "item",
+                "beforeContent": "\u2265 3",
+                "objectType": "item",
+                "pContent": "None",
+                "query": {
+                    "query": "containsObjectsOfType",
+                    "object_type": "item",
+                    "n_operator": "gte",
+                    "n": 3
+                }
+            },
+            "position": {
+                "x": 100,
+                "y": 300
+            },
+            "width": 244,
+            "height": 134
+        }
+    ],
+    "edges": [],
+    "file_path": "data/order_process.jsonocel",
+    "exact": true
+}

@@ -1,0 +1,145 @@
+.ENAV-outer {
+    width: 100vw;
+    display: grid;
+    grid-template-rows: auto auto;
+
+    /** For some reason, the explori logo is 39px high (at least on my machine) **/
+    height: var(--navbar-height);
+}
+
+.ENAV-Row {
+    background-color: white;
+    /*z-index: 1;*/
+}
+
+.ENAV-Row1 {
+    padding: .5rem 2rem;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    border-bottom: solid;
+    border-color: rgba(0, 0, 0, 0.1);
+    border-width: 1px;
+}
+
+.ENAV-logo {
+    display: flex;
+    align-items: center;
+}
+
+.ENAV-logo>img {
+    width: 2rem;
+    height: 2rem;
+    margin: 0 1rem 0 0;
+}
+
+.ENAV-logo>span {
+    font-size: 1.8rem;
+    font-family: "Nunito", sans-serif;
+    font-weight: bold;
+    line-height: 2rem;
+}
+
+.ENAV-new-session {
+    color: var(--text-default);
+    opacity: 0.7;
+    transition: opacity 200ms ease-out;
+}
+
+.ENAV-new-session:hover {
+    opacity: 1;
+}
+
+.ENAV-new-session:visited {
+    color: var(--text-default);
+}
+
+.ENAV-new-session>svg {
+    height: 1.8rem;
+}
+
+.ENAV-help {
+    padding-right: 1rem;
+}
+
+.ENAV-Row2 {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    padding: 0 2rem;
+
+    border-bottom: solid;
+    border-color: rgba(0, 0, 0, 0.2);
+    border-width: 1px;
+}
+
+.ENAV-links {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+    gap: 2rem;
+}
+
+.ENAV-link {
+    display: flex;
+    align-items: center;
+
+    --padding: 0.7rem;
+
+    /*margin-right: 2rem;*/
+    padding: var(--padding) 0;
+    height: calc(100% - 2 * var(--padding));
+
+    color: var(--text-default);
+    text-decoration: none;
+    opacity: 0.8;
+
+    font-family: "Nunito", sans-serif;
+
+    transition: opacity 200ms ease-out;
+}
+
+.ENAV-link:visited {
+    color: var(--text-default);
+}
+
+.ENAV-link>svg {
+    margin-right: 0.5rem;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.ENAV-link:hover {
+    opacity: 1;
+    box-shadow: 0 .125rem 0 0 rgba(var(--color1), 0.5);
+}
+
+.ENAV-link--active {
+    opacity: 0.9;
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 0.8);
+}
+
+.ENAV-link--active:hover {
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 1);
+}
+
+.ENAV-props {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+}
+
+.ENAV-integrated-props {
+    justify-content: flex-end;
+    margin-right: 1rem;
+}
+
+.ENAV-props>* {
+    /*margin-left: 2rem;*/
+}

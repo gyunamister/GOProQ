@@ -1,0 +1,15 @@
+ARG BUILD_ENV
+
+FROM ocpq-backend-base-image as common_pre_build
+ONBUILD WORKDIR /ocpq/fastapi
+
+FROM common_pre_build as prod_build
+ONBUILD COPY src/ src/
+ONBUILD COPY data/order_process.jsonocel data/uploaded/demo_ocel.jsonocel
+
+FROM common_pre_build as dev_build
+ONBUILD ENV DEV=1
+
+FROM ${BUILD_ENV}_build
+CMD DEV=${DEV} PYTHONUNBUFFERED=1 PYTHONPATH="src/" uvicorn main:app --host 0.0.0.0 --port 8080
+

@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  webserver:
+    build:
+      args:
+        BUILD_ENV: 'dev'
+    volumes:
+      - ./frontend:/ocpq/webserver
+  fastapi:
+    build:
+      args:
+        BUILD_ENV: 'dev'
+    volumes:
+      - ./backend:/ocpq/fastapi

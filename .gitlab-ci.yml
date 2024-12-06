@@ -1,0 +1,46 @@
+default:
+  tags:
+    - docker
+
+stages:
+  - build-docker
+
+build-docker-dev:
+  stage: build-docker
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  image: docker:20.10.16
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+      command: ["--tls=false"]
+  variables:
+    # using "docker" as the host is only possible if you alias the service below
+    DOCKER_HOST: tcp://docker:2375 
+    # could be wrong here but although Docker defaults to overlay2, 
+    # Docker-in-Docker (DIND) does not according to the following GitLab doc: 
+    # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    docker-compose build _backend_base && docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
+
+build-docker-prod:
+  stage: build-docker
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  image: docker:20.10.16
+  services:
+    - name: docker:20.10.16-dind
+      alias: docker
+      command: ["--tls=false"]
+  variables:
+    # using "docker" as the host is only possible if you alias the service below
+    DOCKER_HOST: tcp://docker:2375 
+    # could be wrong here but although Docker defaults to overlay2, 
+    # Docker-in-Docker (DIND) does not according to the following GitLab doc: 
+    # https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#use-the-overlayfs-driver
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    docker-compose build _backend_base && docker-compose -f docker-compose.yml -f docker-compose.prod.yml build

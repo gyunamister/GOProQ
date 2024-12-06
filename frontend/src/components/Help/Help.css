@@ -1,0 +1,134 @@
+.Help {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+}
+
+
+.Help-Card {
+    width: calc(min(100vw - 4rem, 30cm));
+    margin-bottom: 2rem;
+}
+
+.Help-Card-Title {
+    --title-size: 1.2rem;
+    font-size: var(--title-size);
+    line-height: var(--title-size);
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.Help-Card-Title-Circle {
+    --circle-size: 1rem;
+    display: inline-block;
+
+    width: var(--circle-size);
+    height: var(--circle-size);
+    border-radius: 50%;
+
+    margin-right: .5rem;
+}
+
+.Help-Card-Title-Container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.Help-Card-Docs-Container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 7rem;
+}
+
+.PanicButton {
+    color: red !important;
+}
+
+.Help-a {
+    text-decoration: none;
+}
+
+.Help-a:visited {
+    color: inherit;
+    background-color: transparent;
+}
+
+.DefaultLayout-Container {
+    display: grid;
+    grid-template-rows: auto auto;
+}
+
+.DefaultLayout-Content {
+    padding: 0 1rem 2rem 1rem;
+    margin: 2rem auto;
+
+    max-width: 30cm;
+    background-color: white;
+
+    border-style: solid;
+    border-radius: 1rem;
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.NavbarButton {
+    border: none;
+    background-color: rgba(0, 0, 0, 0);
+
+    display: flex;
+    align-items: center;
+
+    --padding: 0.7rem;
+
+    padding: var(--padding) 0;
+    height: calc(100% - 2 * var(--padding));
+
+    color: var(--text-default);
+    text-decoration: none;
+    opacity: 0.8;
+
+    font-size: 1rem;
+    font-family: "Nunito", sans-serif;
+
+    transition: opacity 200ms ease-out;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.NavbarButton:visited {
+    color: var(--text-default);
+}
+
+.NavbarButton>svg {
+    margin-right: 0.5rem;
+}
+
+.NavbarButton:hover {
+    opacity: 1;
+    box-shadow: 0 .125rem 0 0 rgba(var(--color1), 0.5);
+}
+
+.NavbarButton--active {
+    opacity: 0.9;
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 0.8);
+}
+
+.NavbarButton--active:hover {
+    box-shadow: 0 .25rem 0 0 rgba(var(--color1), 1);
+}
+
+.NavbarButton-Icon {
+    width: 1.1rem;
+    height: 1.1rem;
+}

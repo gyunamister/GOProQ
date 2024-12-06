@@ -1,0 +1,10 @@
+.CSV-Settings-container {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.5rem;
+}
+
+.CSV-Settings-container>h3 {
+    margin: 2rem 0 0 0;
+}

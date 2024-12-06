@@ -1,0 +1,40 @@
+.NavbarDropdown-Container {
+    --border-width: 1px;
+
+    position: relative;
+    height: 100%;
+
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+.NavbarDropdown-ButtonWrapper {
+    padding: 0 1rem;
+}
+
+.NavbarDropdown-ButtonWrapper--open {
+    background-color: rgba(var(--color1), 0.1);
+}
+
+.NavbarDropdown-Button-DropdownIcon {
+    margin-left: 0.25rem;
+}
+
+.NavbarDropdown-Dropdown {
+    z-index: 10;
+    position: absolute;
+    bottom: 0;
+    transform: translateY(calc(100% - var(--border-width)));
+    right: 0;
+
+    --dropdown-side-padding: 1rem;
+
+    padding: .5rem 0;
+    min-width: calc(100% - 2 * var(--border-width));
+
+    background-color: white;
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(var(--color1), .5);
+    border-top-color: rgba(var(--color1), .1);
+}
