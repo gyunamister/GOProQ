@@ -57,8 +57,3 @@ Follow the steps below to deploy and run GOProQ. Ensure you meet the requirement
 - Ensure no other application is using port **8080** (backend) or **3000** (frontend).
 - For issues related to Python dependencies, try using an isolated Python environment (e.g., Conda).
 - Always use the `npm ci` command for installing frontend dependencies to ensure exact versions.
-
----
-
-### Happy Querying with GOProQ! 🎉
-Let me know via gyunam.park@fit.fraunhofer.de if you’d like to enhance this tool further with additional features!
