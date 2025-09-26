@@ -171,3 +171,17 @@ export function getObjectTypeColor(numberOfColorsNeeded: number, indexOfCurrentC
 
     return generateColors(numberOfColorsNeeded, indexOfCurrentColor);
 }
+
+export async function getPECount() {
+    const potFilePath = localStorage.getItem('ocel');
+    const filePath = potFilePath? potFilePath : "";
+    const uri = getURI("/logs/process_execution_count", {file_path: filePath});
+    let results: number = -1
+    await fetch(uri)
+        .then((response) => response.json())
+        .then((result: number) => {
+            results = result
+        })
+        .catch(err => console.log("Error in fetching:" + err))
+    return results
+}

@@ -1,3 +1,7 @@
+# Set matplotlib backend before any imports that might trigger matplotlib
+import matplotlib
+matplotlib.use('Agg')
+
 import os
 
 from fastapi import FastAPI
@@ -20,16 +24,16 @@ if DEVELOPMENT_MODE:
         expose_headers=["*"],
     )
 
-import endpoints.pq
-app.include_router(endpoints.pq.router)
+from src.endpoints import pq
+app.include_router(pq.router)
 print('[Server] Process querying endpoints registered.')
 
-import endpoints.log_management
-app.include_router(endpoints.log_management.router)
+from src.endpoints import log_management
+app.include_router(log_management.router)
 print('[Server] Event log management endpoints registered.')
 
-import endpoints.performance
-app.include_router(endpoints.performance.router)
+from src.endpoints import performance
+app.include_router(performance.router)
 print('[Server] Performance metrics endpoints registered.')
 
 print('[Server] Finished registering all endpoints.')

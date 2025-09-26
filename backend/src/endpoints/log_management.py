@@ -60,15 +60,20 @@ class FlowState(BaseModel):
 
 
 class AvailableLogsResponseModel(BaseModel):
-    __root__: List[List[str | float]]
-
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": [
-                "uploaded/p2p-normal.jsonocel",
-                "mounted/b2c-unfiltered.csv"
+                ["uploaded/p2p-normal.jsonocel", 1024],
+                ["mounted/b2c-unfiltered.csv", 2048]
             ]
         }
+    }
+    
+    def __iter__(self):
+        return iter(self.model_fields)
+    
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 class CSV(BaseModel):
@@ -78,8 +83,8 @@ class CSV(BaseModel):
     id: str
     separator: str
 
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "objects": [
                     "PURCHORD",
@@ -91,6 +96,7 @@ class CSV(BaseModel):
                 "separator": ","
             }
         }
+    }
 
 
 class Extraction(BaseModel):
@@ -111,16 +117,21 @@ class StoreExtractionPayload(BaseModel):
 
 
 class ColumnListResponseModel(BaseModel):
-    __root__: List[str]
-
-    class Config:
-        schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": [
                 "ORDER",
                 "CONTAINER",
                 "REQ"
             ]
         }
+    }
+    
+    def __iter__(self):
+        return iter(self.model_fields)
+    
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 @router.get("/test")
@@ -172,9 +183,9 @@ def get_activities(file_path: str):
 
 
 def get_query(ocel):
-    from src.endpoints.pq import QueryGraph
-    from src.endpoints.pq import current_query_object
-    import src.endpoints.pq as pq
+    from endpoints.pq import QueryGraph
+    from endpoints.pq import current_query_object
+    import endpoints.pq as pq
     if current_query_object is None or \
             len(ocel.process_executions) != len(current_query_object.ocel.process_executions) or \
             str(ocel.process_executions) != str(current_query_object.ocel.process_executions):
@@ -283,7 +294,19 @@ def save_state(flow: FlowState):
 
 
 class AvailableFlowStatesResponseModel(BaseModel):
-    __root__: List[Tuple[str, float, List[dict], List[dict]]]
+    model_config = {
+        "json_schema_extra": {
+            "example": [
+                ["state1", 0.5, [{"key": "value"}], [{"key": "value"}]]
+            ]
+        }
+    }
+    
+    def __iter__(self):
+        return iter(self.model_fields)
+    
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 @router.get('/available_flow_states', response_model=AvailableFlowStatesResponseModel)
@@ -391,7 +414,7 @@ def get_flow_file(flow_folder: str, name: str):
     return flow_file
 
 
-@router.get('/available', response_model=AvailableLogsResponseModel)
+@router.get('/available')
 def list_available_logs():
     """
     Lists all available OCELS and returns them as list of strings that can be used to access them using other

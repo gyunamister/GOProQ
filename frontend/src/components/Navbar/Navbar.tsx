@@ -12,9 +12,11 @@ import {
     faDiagramProject,
     faArrowRightArrowLeft,
     faFileUpload,
-    faFlask
+    faAtom,
+    faDatabase,
+    faSearch
 } from "@fortawesome/free-solid-svg-icons";
-import {IconDefinition, faCircleQuestion} from "@fortawesome/free-regular-svg-icons";
+import {IconDefinition} from "@fortawesome/free-regular-svg-icons";
 import {Link, useLocation} from "react-router-dom";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 
@@ -43,7 +45,7 @@ export function Navbar() {
                     </Typography>
                     <IconButton
                         component={Link}
-                        to={"/graph"}
+                        to={"/"}
                         size="large"
                         edge="start"
                         color="inherit"
@@ -90,23 +92,19 @@ export function OCPQNavbar(props: NavbarProps) {
         <div className="ENAV-outer">
             <div className="ENAV-Row ENAV-Row1">
                 <div className="ENAV-logo">
-                    <img src="/OCPQ.png" alt="" />
+                    <img src="/GoProQ.png" alt="" />
                     <span>GOProQ</span>
                 </div>
                 <div>
                     <Link to="/session" className="ENAV-new-session ENAV-help" title={"Start a new session by selecting a new OCEL."}>
                         <FontAwesomeIcon icon={faFileUpload as IconProp} />
                     </Link>
-                    <Link to="/help" className="ENAV-new-session" title={"Help page for documentation and trouble-shooting."}>
-                        <FontAwesomeIcon icon={faCircleQuestion as IconProp} />
-                    </Link>
                 </div>
             </div>
             <div className="ENAV-Row ENAV-Row2">
                 <div className="ENAV-links">
-                    <NavbarLink icon={faArrowRightArrowLeft} display="Query" route="/" title={""}/>
-                    <NavbarLink icon={faDiagramProject} display="Graph" route="/graph" title={""}/>
-                    <NavbarLink icon={faFlask} display="Experimental" route="/experimental" title={""}/>
+                    <NavbarLink icon={faDatabase} display="Data Lens" route="/" title={""}/>
+                    <NavbarLink icon={faSearch} display="Query System" route="/query" title={""}/>
                 </div>
                 <div className="ENAV-props">
                     {props.lowerRowSlot !== undefined ? props.lowerRowSlot : undefined }

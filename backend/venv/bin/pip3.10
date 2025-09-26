@@ -1,4 +1,4 @@
-#!/Users/gyunam/Documents/OCPQ/backend/venv/bin/python
+#!/Users/gyunam/Documents/GOProQ/backend/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

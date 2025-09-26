@@ -45,6 +45,8 @@ AlignedEdgeTimes = namedtuple("AlignedEdgeTimes",
 
 
 class CollectedTimes(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
+    
     waiting_times: Dict[Node, List[int]]
     service_times: Dict[Node, List[int]]
     sojourn_times: Dict[Node, List[int]]
@@ -61,6 +63,8 @@ class CollectedTimes(BaseModel):
 
 
 class NodePerformanceMetrics(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
+    
     service_time: int
     waiting_time: int | None
     sojourn_time: int | None

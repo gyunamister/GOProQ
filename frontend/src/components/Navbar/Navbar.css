@@ -39,8 +39,13 @@
 .ENAV-logo>span {
     font-size: 1.8rem;
     font-family: "Nunito", sans-serif;
-    font-weight: bold;
+    font-weight: 800;
     line-height: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
 }
 
 .ENAV-new-session {

@@ -1,3 +1,7 @@
+# Set matplotlib backend before any imports that might trigger matplotlib
+import matplotlib
+matplotlib.use('Agg')
+
 import datetime
 import os
 from collections import defaultdict
@@ -11,7 +15,6 @@ from pydantic import BaseModel
 
 import networkx as nx
 import json
-import matplotlib.pyplot as plt
 import time
 from dataclasses import dataclass
 from ocpa.objects.log.ocel import OCEL
@@ -23,12 +26,108 @@ from pandas import DataFrame
 from pandas.core.groupby import DataFrameGroupBy
 from pm4py.objects.log.obj import EventLog
 from functools import cmp_to_key
+import pandas as pd
 
 router = APIRouter(prefix="/pq", tags=["Process querying"])
 LIVE_QUERY_TIMEOUT = 30.0
 
 wildcards = {}
 performance_flag_global = False
+
+
+@router.put("/ocel_metadata")  
+def get_ocel_metadata(query_dict: dict):
+    """
+    Extract activities and object types from the current OCEL
+    for use in the graphical query builder.
+    """
+    try:
+        ocel, _ = get_ocel(query_dict["file_path"], two_return_values=True)
+        
+        # Extract activities from event log
+        activities = []
+        if 'event_activity' in ocel.log.log.columns:
+            activities = list(ocel.log.log['event_activity'].unique())
+            activities = [str(a) for a in activities if pd.notna(a)]  # Remove NaN values
+            activities.sort()
+            print(f"Found {len(activities)} activities from event_activity column")
+        else:
+            print("Warning: 'event_activity' column not found in OCEL log")
+            # Fallback: try other possible column names
+            possible_columns = ['ocel:activity', 'concept:name', 'activity', 'Activity']
+            for col in possible_columns:
+                if col in ocel.log.log.columns:
+                    activities = list(ocel.log.log[col].unique())
+                    activities = [str(a) for a in activities if pd.notna(a)]
+                    activities.sort()
+                    print(f"Found {len(activities)} activities from {col} column")
+                    break
+        
+        # Extract object types directly from OCEL object
+        object_types = []
+        if hasattr(ocel, 'object_types'):
+            object_types = list(ocel.object_types)
+            object_types = [str(ot) for ot in object_types if ot]  # Remove empty strings
+            object_types.sort()
+            print(f"Found {len(object_types)} object types from ocel.object_types")
+        else:
+            print("Warning: ocel.object_types not available")
+        
+        # Add ANY as default option for object types
+        if 'ANY' not in object_types:
+            object_types.insert(0, 'ANY')
+        
+        # Get some basic statistics
+        total_events = len(ocel.log.log)
+        total_process_executions = len(ocel.process_executions) if hasattr(ocel, 'process_executions') else 0
+        
+        # Count unique objects across all object types
+        # Objects are stored as lists in columns named after object types
+        unique_objects = set()
+        for obj_type in object_types:
+            if obj_type != 'ANY' and obj_type in ocel.log.log.columns:
+                # Get all object IDs from this object type column
+                for obj_list in ocel.log.log[obj_type]:
+                    if isinstance(obj_list, list):
+                        unique_objects.update(obj_list)
+                    elif pd.notna(obj_list):  # Handle single values
+                        unique_objects.add(obj_list)
+        
+        total_unique_objects = len(unique_objects)
+        
+        print(f"Final result - Activities: {len(activities)}, Object Types: {len(object_types)}")
+        print(f"Activities: {activities[:10]}...")  # Show first 10
+        print(f"Object Types: {object_types}")
+        print(f"Statistics - Events: {total_events}, Objects: {total_unique_objects}, PEs: {total_process_executions}")
+        
+        return {
+            'activities': activities,
+            'object_types': object_types,
+            'statistics': {
+                'total_events': total_events,
+                'total_objects': total_unique_objects,  # Fixed: count unique objects
+                'total_process_executions': total_process_executions,  # Added: PE count
+                'num_activities': len([a for a in activities if a != 'ANY']),
+                'num_object_types': len([ot for ot in object_types if ot != 'ANY'])
+            }
+        }
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in get_ocel_metadata: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return {
+            'error': str(e),
+            'activities': [],
+            'object_types': ['ANY'],
+            'statistics': {
+                'total_events': 0,
+                'total_objects': 0,
+                'total_process_executions': 0,  # Added: PE count
+                'num_activities': 0,
+                'num_object_types': 0
+            }
+        }
 
 
 def set_wildcards(new_wildcard: str, object_type: str):
@@ -1006,90 +1105,105 @@ class QueryExecution:
 
         replaced_wildcard = translate_object_types(query)
 
+        # Debug: print query structure to understand the issue
+        print(f"DEBUG execute_query: query structure = {query}")
+        print(f"DEBUG execute_query: query keys = {list(query.keys()) if isinstance(query, dict) else 'Not a dict'}")
+
         if not objects:
-            if query["query"] == "isDirectlyFollowed" or query["query"] == "isEventuallyFollowed":
-                objects = self._query.get_objects_with_id(process_execution_index, query["first_type"])
+            # Handle both old and new query structures
+            query_type = query.get("query") if isinstance(query, dict) else None
+            if query_type == "isDirectlyFollowed" or query_type == "isEventuallyFollowed":
+                first_type = query.get("first_type", "ANY")
+                objects = self._query.get_objects_with_id(process_execution_index, first_type)
             else:
-                objects = self._query.get_objects_with_id(process_execution_index, query["object_type"])
+                object_type = query.get("object_type", "ANY")
+                objects = self._query.get_objects_with_id(process_execution_index, object_type)
 
         global performance_flag_global
-        if "node_metric" in query and query["node_metric"] != "":
+        if query.get("node_metric") and query["node_metric"] != "":
             # satisfied_objects = self._query.filter_nodes_with_metrics(satisfied_objects,
             #                                                          query["node_metric"],
             #                                                          query["node_metric_value"],
             #                                                          query["node_metric_operator"])
-            node_metrics = [query["node_metric"], query["node_metric_value"], query["node_metric_operator"]]
+            node_metrics = [query.get("node_metric", ""), query.get("node_metric_value", ""), query.get("node_metric_operator", "")]
             performance_flag_global = True
 
-        if "edge_metric" in query and query["edge_metric"] != "":
+        if query.get("edge_metric") and query["edge_metric"] != "":
             # satisfied_objects = self._query.filter_edges_with_metrics(objects, satisfied_objects,
             #                                                          satisfied_edge_objects,
             #                                                          query["edge_metric"],
             #                                                          query["edge_metric_value"],
             #                                                          query["edge_metric_operator"])
-            edge_metrics = [query["edge_metric"], query["edge_metric_value"], query["edge_metric_operator"]]
+            edge_metrics = [query.get("edge_metric", ""), query.get("edge_metric_value", ""), query.get("edge_metric_operator", "")]
             performance_flag_global = True
-        match query["query"]:
+        
+        # Helper function for safe query field access
+        def get_query_field(field, default=""):
+            return query.get(field, default)
+        
+        # Safe access to query type
+        query_type = get_query_field("query")
+        match query_type:
             case "isStart":
                 satisfied_objects = self._query.execute_start_or_end(
-                    "START", query["event_activity"], query["object_type"],
+                    "START", get_query_field("event_activity"), get_query_field("object_type"),
                     process_execution_index, objects, node_metrics,
-                    quantifier=query["quantifier"],
-                    p=query["p"], p_operator=query["p_operator"],
-                    p_mode=query["p_mode"], boolean_operator=query["boolean_operator"])
+                    quantifier=get_query_field("quantifier"),
+                    p=get_query_field("p"), p_operator=get_query_field("p_operator"),
+                    p_mode=get_query_field("p_mode"), boolean_operator=get_query_field("boolean_operator"))
             case "isEnd":
                 satisfied_objects = self._query.execute_start_or_end(
-                    "END", query["event_activity"], query["object_type"],
+                    "END", get_query_field("event_activity"), get_query_field("object_type"),
                     process_execution_index, objects, node_metrics,
-                    quantifier=query["quantifier"],
-                    p=query["p"], p_operator=query["p_operator"],
-                    p_mode=query["p_mode"], boolean_operator=query["boolean_operator"])
+                    quantifier=get_query_field("quantifier"),
+                    p=get_query_field("p"), p_operator=get_query_field("p_operator"),
+                    p_mode=get_query_field("p_mode"), boolean_operator=get_query_field("boolean_operator"))
             case "isDirectlyFollowed":
                 satisfied_objects, edge_objects = self._query.execute_edge_query(
-                    "DF", query["first_activity"], objects,
-                    query["second_activity"], query["second_type"],
+                    "DF", get_query_field("first_activity"), objects,
+                    get_query_field("second_activity"), get_query_field("second_type"),
                     process_execution_index, edge_metrics,
-                    n_operator=query["n_operator"], n=query["n"],
-                    p=query["p"],
-                    p_operator=query["p_operator"], p_mode=query["p_mode"],
-                    quantifier=query["quantifier"], boolean_operator=query["boolean_operator"])
+                    n_operator=get_query_field("n_operator"), n=get_query_field("n"),
+                    p=get_query_field("p"),
+                    p_operator=get_query_field("p_operator"), p_mode=get_query_field("p_mode"),
+                    quantifier=get_query_field("quantifier"), boolean_operator=get_query_field("boolean_operator"))
                 satisfied_edge_objects.extend(edge_objects)
             case "isEventuallyFollowed":
                 satisfied_objects, edge_objects = self._query.execute_edge_query(
-                    "EF", query["first_activity"], objects,
-                    query["second_activity"], query["second_type"],
+                    "EF", get_query_field("first_activity"), objects,
+                    get_query_field("second_activity"), get_query_field("second_type"),
                     process_execution_index, edge_metrics,
-                    n_operator=query["n_operator"], n=query["n"],
-                    p=query["p"],
-                    p_operator=query["p_operator"], p_mode=query["p_mode"],
-                    quantifier=query["quantifier"], boolean_operator=query["boolean_operator"])
+                    n_operator=get_query_field("n_operator"), n=get_query_field("n"),
+                    p=get_query_field("p"),
+                    p_operator=get_query_field("p_operator"), p_mode=get_query_field("p_mode"),
+                    quantifier=get_query_field("quantifier"), boolean_operator=get_query_field("boolean_operator"))
                 satisfied_edge_objects.extend(edge_objects)
             case "isContainedEvent":
                 same_event = False
                 if "same_event" in query:
-                    same_event = (query["same_event"] == "true")
+                    same_event = (get_query_field("same_event") == "true")
                 satisfied_objects = self._query.contains_event(
-                    query["event_activity"], query["object_type"],
+                    get_query_field("event_activity"), get_query_field("object_type"),
                     process_execution_index, objects, node_metrics,
-                    n_operator=query["n_operator"], n=query["n"], p=query["p"],
-                    p_operator=query["p_operator"], p_mode=query["p_mode"],
-                    boolean_operator=query["boolean_operator"], same_event=same_event)
+                    n_operator=get_query_field("n_operator"), n=get_query_field("n"), p=get_query_field("p"),
+                    p_operator=get_query_field("p_operator"), p_mode=get_query_field("p_mode"),
+                    boolean_operator=get_query_field("boolean_operator"), same_event=same_event)
             case "areContainedEvents":
                 satisfied_objects = self._query.contains_events(
-                    query["event_activity"], query["object_type"],
+                    get_query_field("event_activity"), get_query_field("object_type"),
                     process_execution_index, objects, node_metrics,
-                    n_operator=query["n_operator"], n=query["n"], p=query["p"],
-                    p_operator=query["p_operator"], p_mode=query["p_mode"],
-                    quantifier=query["quantifier"], boolean_operator=query["boolean_operator"])
+                    n_operator=get_query_field("n_operator"), n=get_query_field("n"), p=get_query_field("p"),
+                    p_operator=get_query_field("p_operator"), p_mode=get_query_field("p_mode"),
+                    quantifier=get_query_field("quantifier"), boolean_operator=get_query_field("boolean_operator"))
             case "containsObjectsOfType":
                 satisfied_objects = contains_object_types(
-                    objects, n_operator=query["n_operator"],
-                    n=query["n"])
+                    objects, n_operator=get_query_field("n_operator"),
+                    n=get_query_field("n"))
                 check_boolean_operator = True
             case "containsObjects":
                 satisfied_objects = contains_objects(
-                    objects, query["needed_objects"],
-                    quantifier=query["quantifier"])
+                    objects, get_query_field("needed_objects"),
+                    quantifier=get_query_field("quantifier"))
                 check_boolean_operator = True
             case "isParallel":
                 pass
@@ -1098,10 +1212,10 @@ class QueryExecution:
             case "OR-Split" | "OR-Join" | "orNode":
                 satisfied_objects = objects
 
-        if query["query"] != "containsObjects":
+        if query_type != "containsObjects":
             set_wildcards_from_query(query, self.extract_objects(satisfied_objects), replaced_wildcard)
 
-        if check_boolean_operator and "boolean_operator" in query and query["boolean_operator"] == "NOT":
+        if check_boolean_operator and "boolean_operator" in query and get_query_field("boolean_operator") == "NOT":
             if len(satisfied_objects) == 0:
                 return objects, []
             else:
@@ -1154,50 +1268,10 @@ class QueryExecution:
         return objects
 
 
-class QueryParser:
-    # AND => execute one query after the other
-    # OR => create new query with current state in the end take PEs present in at least one branch
-    # NOT => 1: save PEs, execute query and return all PEs not returned by query
-    #        2: parameter for query which returns if condition does not hold
+# Legacy QueryParser class removed - using GOProQ implementation instead
 
-    process_executions = []
 
-    def __init__(self, data, left=None, right=None):
-        self.data = data
-        self.right = right
-        self.left = left
-
-        self._query = None
-        self._ocel = None
-        self._process_executions = None
-        self._process_indices = None
-
-    @property
-    def query(self):
-        return self._query
-
-    @query.setter
-    def query(self, value):
-        self._query = value
-
-    def flatten(self):
-        return {
-            "data": self.data,
-            "left": self.left.flatten() if self.left else None,
-            "right": self.right.flatten() if self.right else None,
-        }
-
-    @classmethod
-    def from_json(cls, d):
-        obj = cls(d["data"])
-
-        if "left" in d and d["left"] is not None:
-            obj.left = cls.from_json(d["left"])
-
-        if "right" in d and d["right"] is not None:
-            obj.right = cls.from_json(d["right"])
-
-        return obj
+# Helper functions for legacy compatibility
 
     def execute_single_query(self, query, process_executions, process_execution_indices):
         self._query.process_executions = process_executions
@@ -2155,12 +2229,6 @@ class QueryParser:
                       indent=4, default=str)
         return export
 
-
-def print_graph(graph):
-    nx.draw(graph)
-    plt.show()
-
-
 def execute_unique_node(node, query_graph, ocel):
     node_data = node["data"]["query"]
     query_execution = QueryExecution([node_data])
@@ -2182,10 +2250,20 @@ def print_info(log):
 
 
 class TestResponseModel(BaseModel):
-    __root__: int
+    model_config = {
+        "json_schema_extra": {
+            "example": 42
+        }
+    }
+    
+    def __iter__(self):
+        return iter(self.model_fields)
+    
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
-current_query: QueryParser = QueryParser({})
+# Legacy current_query removed
 current_query_object: QueryGraph = None
 
 
@@ -2206,16 +2284,16 @@ def reset_query():
 
 @router.put("/query_to_graph")
 def execute_query(query_dict: dict):
-    #  print(query_dict)
-    # this basically
+    """
+    Main query execution endpoint.
+    Supports both legacy format and new GOProQ format.
+    """
+    # Log query for debugging
     with open('src/test/test1.json', 'w') as f:
         json.dump(query_dict, f, indent=4)
 
-    start_time = time.time()
-
-    # ocel = ocel_import_factory.apply(query_dict["file_path"])
+    # Get OCEL and initialize query graph
     ocel, new_flag = get_ocel(query_dict["file_path"], two_return_values=True)
-    query = query_dict["query"]
     global current_query_object
     if current_query_object is None or new_flag:
         query_obj = QueryGraph(ocel)
@@ -2223,39 +2301,116 @@ def execute_query(query_dict: dict):
     else:
         query_obj = current_query_object
         query_obj.reset_process_executions()
-    binary_tree = QueryParser.from_json(query)
-    binary_tree.query = query_obj
 
-    single_flag = False
-    execution_type = "Query execution"
-    if "single" in query_dict:
-        single_flag = query_dict["single"]
-        execution_type = "Live querying"
+    # Determine if this is a graphical query (nodes/edges) or legacy query
+    query = query_dict["query"]
+    live_mode = query_dict.get("single", False)
+    
+    try:
+        # Try new GOProQ execution first
+        from .goproq_executor import execute_goproq_query
+        
+        # Handle different query input formats
+        if "nodes" in query and "edges" in query:
+            # Graphical query format
+            query_input = (query["nodes"], query["edges"])
+        elif isinstance(query.get("data"), dict) and "nodes" in query["data"]:
+            # Graphical query wrapped in data
+            query_input = (query["data"]["nodes"], query["data"].get("edges", []))
+        else:
+            # Legacy query format
+            query_input = query
+        
+        print(f"DEBUG: Attempting GOProQ execution with query_input type: {type(query_input)}")
+        print(f"DEBUG: query_input content: {query_input}")
+        result = execute_goproq_query(ocel, query_obj, query_input, live_mode)
+        print(f"DEBUG: GOProQ execution succeeded")
+        
+        # Add backward compatibility fields
+        result.update({
+            'objects': {},  # For frontend compatibility
+            'edges': {},    # For frontend compatibility
+            'wildcards': wildcards,
+            'performance': performance_flag_global,
+        })
+        
+        global current_query
+        # Legacy current_query reset removed
+        
+        return result
+        
+    except Exception as e:
+        # Return error instead of falling back to legacy
+        print(f"ERROR: GOProQ execution failed: {e}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        return {
+            'error': str(e),
+            'message': 'Query execution failed. Please check your query format.',
+            'length': 0,
+            'indices': [],
+            'run': {
+                'name': 'Failed execution',
+                'time': '0.0s',
+                'raw_time': 0.0,
+            }
+        }
 
-    pes, pes_idx, res_objects, res_edges = binary_tree.execute(ocel, single=single_flag)
-    # print(pes_idx)
-    # print(len(pes))
-    end_time = time.time()
-    print("--- %s seconds ---" % (end_time - start_time))
-    global current_query
-    current_query = binary_tree
-    # return {'status': 'successful'}
-    global performance_flag_global
-    return {
-        'length': len(pes),
-        'indices': pes_idx,
-        'objects': dict(res_objects),
-        'edges': dict(res_edges),
-        'run': {
-            'name': execution_type,
-            'time': str(end_time - start_time) + "s",
-            'raw_time': float(str(end_time - start_time)),
-            'start': datetime.datetime.fromtimestamp(start_time).strftime('%c'),
-            'end': datetime.datetime.fromtimestamp(end_time).strftime('%c'),
-        },
-        'wildcards': wildcards,
-        'performance': performance_flag_global,
-    }
+
+
+
+@router.put("/goproq_query")
+def execute_goproq_query_endpoint(query_dict: dict):
+    """
+    Dedicated endpoint for GOProQ queries.
+    Supports the formal query language specification.
+    """
+    try:
+        from .goproq_executor import execute_goproq_query, get_query_statistics
+        
+        # Get OCEL and initialize query graph
+        ocel, new_flag = get_ocel(query_dict["file_path"], two_return_values=True)
+        global current_query_object
+        if current_query_object is None or new_flag:
+            query_obj = QueryGraph(ocel)
+            current_query_object = query_obj
+        else:
+            query_obj = current_query_object
+            query_obj.reset_process_executions()
+        
+        # Extract query input
+        query = query_dict["query"]
+        live_mode = query_dict.get("live_mode", False)
+        
+        # Handle different query input formats
+        if "nodes" in query and "edges" in query:
+            # Graphical query format
+            query_input = (query["nodes"], query["edges"])
+        elif isinstance(query.get("data"), dict) and "nodes" in query["data"]:
+            # Graphical query wrapped in data
+            query_input = (query["data"]["nodes"], query["data"].get("edges", []))
+        else:
+            # Legacy query format (will be converted)
+            query_input = query
+        
+        # Execute GOProQ query
+        result = execute_goproq_query(ocel, query_obj, query_input, live_mode)
+        
+        # Add query statistics
+        result['statistics'] = get_query_statistics(result)
+        
+        # Reset globals for consistency
+        global current_query
+        # Legacy current_query reset removed
+        
+        return result
+        
+    except Exception as e:
+        return {
+            'error': str(e),
+            'message': 'GOProQ query execution failed',
+            'fallback_available': True
+        }
 
 
 @router.put("/runtime_analysis")
@@ -2388,27 +2543,177 @@ def runtime_analysis_files(query_dict: dict):
     file.close()
 
 
+@router.get("/get_process_execution")
+def get_process_execution(index: int, file_path: str):
+    """
+    Get a specific process execution by index.
+    Returns nodes and edges for visualization.
+    """
+    try:
+        # Load the OCEL
+        ocel, new_flag = get_ocel(file_path, two_return_values=True)
+        
+        if not ocel:
+            return {"error": "Failed to load OCEL file"}
+        
+        # Get the process execution graph
+        exec_graph = ocel.get_process_execution_graph(index)
+        
+        # Get the process execution events for this index
+        pe_events = list(ocel.process_executions[index])
+        
+        # Create a mapping from event IDs to event data
+        event_data_map = {}
+        for event_id in pe_events:
+            if event_id in ocel.log.log.index:
+                event_row = ocel.log.log.loc[event_id]
+                event_data_map[event_id] = {
+                    'activity': event_row['event_activity'],
+                    'timestamp': event_row['event_timestamp'],
+                    'start_timestamp': event_row['event_start_timestamp'],
+                    'order': event_row['order'] if 'order' in event_row else [],
+                    'item': event_row['item'] if 'item' in event_row else [],
+                    'delivery': event_row['delivery'] if 'delivery' in event_row else []
+                }
+        
+        # Convert to nodes and edges format
+        nodes = []
+        edges = []
+        
+        # Process nodes
+        for node_id, node_data in exec_graph.nodes(data=True):
+            # Get event data for this node
+            event_data = event_data_map.get(node_id, {})
+            
+            # Collect all object types and objects for this event
+            object_types = []
+            all_objects = []
+            
+            # Check all object type columns
+            for obj_type in ['order', 'item', 'delivery']:
+                if event_data.get(obj_type):
+                    obj_list = event_data[obj_type]
+                    if isinstance(obj_list, list) and obj_list:
+                        object_types.append(obj_type)
+                        all_objects.extend(obj_list)
+                    elif pd.notna(obj_list) and obj_list:  # Handle single values
+                        object_types.append(obj_type)
+                        all_objects.append(obj_list)
+            
+            # Use the first object type found, or 'mixed' if multiple types
+            if len(object_types) == 0:
+                object_type = 'unknown'
+            elif len(object_types) == 1:
+                object_type = object_types[0]
+            else:
+                object_type = 'mixed'  # Multiple object types
+            
+            objects = all_objects
+            
+            # Calculate duration if we have timestamps
+            duration = 0
+            if event_data.get('start_timestamp') and event_data.get('timestamp'):
+                start_time = pd.to_datetime(event_data['start_timestamp'])
+                end_time = pd.to_datetime(event_data['timestamp'])
+                duration = (end_time - start_time).total_seconds()
+            
+            # Use single color scheme for all nodes
+            node_info = {
+                "id": str(node_id),
+                "label": event_data.get('activity', f'Node {node_id}'),
+                "color": '#2196f3',  # Single blue color for all nodes
+                "object_type": object_type,
+                "object_types": object_types,  # Include all object types
+                "activity": event_data.get('activity', 'unknown'),
+                "start_time": event_data.get('start_timestamp'),
+                "end_time": event_data.get('timestamp'),
+                "duration": duration,
+                "events": [node_id],
+                "objects": objects
+            }
+            nodes.append(node_info)
+        
+        # Process edges
+        for source, target, edge_data in exec_graph.edges(data=True):
+            # Get source and target event data for edge labeling
+            source_data = event_data_map.get(source, {})
+            target_data = event_data_map.get(target, {})
+            
+            # Determine edge type and color based on object flow
+            edge_type = 'default'
+            edge_color = '#666'
+            edge_label = ''
+            
+            # Check if there's object flow between events
+            source_objects = set()
+            target_objects = set()
+            
+            # Collect all objects from source event
+            for obj_type in ['order', 'item', 'delivery']:
+                obj_list = source_data.get(obj_type, [])
+                if isinstance(obj_list, list):
+                    source_objects.update(obj_list)
+                elif pd.notna(obj_list) and obj_list:
+                    source_objects.add(obj_list)
+            
+            # Collect all objects from target event
+            for obj_type in ['order', 'item', 'delivery']:
+                obj_list = target_data.get(obj_type, [])
+                if isinstance(obj_list, list):
+                    target_objects.update(obj_list)
+                elif pd.notna(obj_list) and obj_list:
+                    target_objects.add(obj_list)
+            
+            # Find common objects
+            common_objects = source_objects.intersection(target_objects)
+            if common_objects:
+                edge_type = 'object_flow'
+                edge_color = '#666'  # Use same gray color for all edges
+                edge_label = f"Objects: {', '.join(list(common_objects)[:3])}"  # Show first 3 objects
+            
+            edge_info = {
+                "id": f"{source}-{target}",
+                "source": str(source),
+                "target": str(target),
+                "label": edge_label,
+                "color": edge_color,
+                "type": edge_type,
+                "start_time": source_data.get('timestamp'),
+                "end_time": target_data.get('timestamp'),
+                "duration": 0,  # Could calculate if needed
+                "events": [source, target],
+                "objects": list(common_objects)
+            }
+            edges.append(edge_info)
+        
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "index": index
+        }
+        
+    except Exception as e:
+        return {"error": f"Failed to get process execution {index}: {str(e)}"}
+
+
 @router.get("/export")
 def export_ocel(file_path: str):
-    if current_query is not None:
-        file = current_query.export(file_path)
-        return {
-            'file': file,
-            'path': os.path.abspath(file_path)
-        }
+    # Legacy current_query export removed
+    file = "No export available - legacy removed"
+    return {
+        'file': file,
+        'path': os.path.abspath(file_path)
+    }
 
 
 @router.get("/filter")
 def filter_ocel(file_path: str):
-    if current_query is not None:
-        current_query._process_executions = current_query._ocel.process_executions[1:]
-        current_query._process_executions_indices = list(range(1, len(current_query._process_executions)+1))
-        print(current_query._process_executions_indices)
-        file = current_query.export(file_path)
-        return {
-            'file': file,
-            'path': os.path.abspath(file_path)
-        }
+    # Legacy current_query export removed
+    file = "No export available - legacy removed"
+    return {
+        'file': file,
+        'path': os.path.abspath(file_path)
+    }
 
 
 def elements_to_query(elements):
