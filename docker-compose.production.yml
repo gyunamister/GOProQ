@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  # Backend API service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: goproq-backend
+    restart: unless-stopped
+    environment:
+      - MPLBACKEND=Agg
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - backend_data:/app/data
+      - backend_cache:/app/cache
+      - backend_logs:/app/logs
+    networks:
+      - goproq-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend web service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    container_name: goproq-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - goproq-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Nginx reverse proxy (optional, for advanced setups)
+  nginx:
+    image: nginx:alpine
+    container_name: goproq-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - goproq-network
+    profiles:
+      - ssl
+
+volumes:
+  backend_data:
+    driver: local
+  backend_cache:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  goproq-network:
+    driver: bridge

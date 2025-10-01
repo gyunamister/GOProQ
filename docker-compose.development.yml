@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  # Backend API service (development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: goproq-backend-dev
+    restart: unless-stopped
+    environment:
+      - MPLBACKEND=Agg
+      - PYTHONUNBUFFERED=1
+      - DEVELOPMENT_MODE=true
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/data:/app/data:ro
+      - backend_cache:/app/cache
+    ports:
+      - "8080:8080"
+    networks:
+      - goproq-network
+    command: ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+
+  # Frontend development server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        BUILD_ENV: dev
+    container_name: goproq-frontend-dev
+    restart: unless-stopped
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8080
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    ports:
+      - "3000:3000"
+    networks:
+      - goproq-network
+    command: ["npm", "start"]
+
+volumes:
+  backend_cache:
+    driver: local
+
+networks:
+  goproq-network:
+    driver: bridge
