@@ -8,6 +8,8 @@ services:
       dockerfile: Dockerfile
     container_name: goproq-backend
     restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
       - MPLBACKEND=Agg
       - PYTHONUNBUFFERED=1
