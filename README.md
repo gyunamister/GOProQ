@@ -297,6 +297,120 @@ curl -X PUT http://localhost:8080/pq/ocel_metadata \
 
 ---
 
+## Creating Complex Queries in ProQ
+
+### Objective
+
+This SOP outlines the steps to construct and execute complex queries using the ProQ graphical carry language for object-centric event logs.
+
+### Key Steps
+
+ 
+
+**Step 1: Upload Event Log** [0:43](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=43)
+
+![generated-image-at-00:00:43](https://loom.com/i/3b7be4efe33a4228bd35d228fbf6afeb?workflows_screenshot=true)
+
+- Navigate to the ProQ interface.
+- Upload the relevant object-centric event log.
+- Select the 'Order Fulfillment Process' from the uploaded logs.
+
+ 
+
+**Step 2: Review Event Log Data** [0:57](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=57)
+
+![generated-image-at-00:00:57](https://loom.com/i/b7e76bc0c6e144239e484908ea67d30c?workflows_screenshot=true)
+
+- In the data lens, review the following: 
+  - Total number of events
+  - Number of objects
+  - Process executions
+  - Activities and object types involved.
+
+ 
+
+**Step 3: Create a New Query** [2:15](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=135)
+
+![generated-image-at-00:02:15](https://loom.com/i/58f299d5cd6b45ba90489271709933fc?workflows_screenshot=true)
+
+- Go to the carrying center.
+- Click on 'Create New Query'.
+- Name your query (e.g., 'Example Query').
+
+ 
+
+**Step 4: Define Initial Query Parameters** [2:24](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=144)
+
+![generated-image-at-00:02:24](https://loom.com/i/bfa6edf902ed49439a31a6105d47cd8b?workflows_screenshot=true)
+
+- Set a condition to filter process executions: 
+  - Example: 'Less than five items'.
+- Save the current query.
+
+ 
+
+**Step 5: Add Counterflow Constraint** [2:42](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=162)
+
+![generated-image-at-00:02:42](https://loom.com/i/d4949d35b3ef467295f7050c26055b38?workflows_screenshot=true)
+
+- Add a counterflow constraint to the query: 
+  - Specify the relationship between 'Place Order' and 'Load Cargo'.
+  - Set the condition to 'more than or equal to twice'.
+- Save the updated query.
+
+ 
+
+**Step 6: Connect Query Components** [3:14](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=194)
+
+![generated-image-at-00:03:14](https://loom.com/i/b60a12cdb29e4f7ab932581bd150ea37?workflows_screenshot=true)
+
+- Use the 'AND' logic operation to connect the two components of your query.
+
+ 
+
+**Step 7: Execute the Query** [3:23](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=203)
+
+![generated-image-at-00:03:23](https://loom.com/i/e1830d6985a8471c9ed5f5b4628d4530?workflows_screenshot=true)
+
+- Run the query to find process executions that meet the criteria.
+
+ 
+
+**Step 8: Refine the Query** [4:00](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=240)
+
+![generated-image-at-00:04:00](https://loom.com/i/93e7a0eae97f46e487e4c550d086577a?workflows_screenshot=true)
+
+- Go back to the editing panel to add another component: 
+  - Add a condition for 'multiple received payments' (more than or equal to twice).
+- Connect this new component using the 'AND' logic operator.
+
+ 
+
+**Step 9: Execute the Refined Query** [4:34](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=274)
+
+![generated-image-at-00:04:34](https://loom.com/i/21a808699f1b4b22aa36bebd04055e8c?workflows_screenshot=true)
+
+- Update and execute the refined query to see the results.
+
+ 
+
+**Step 10: Verify Query Results** [5:11](https://loom.com/share/f08c7f9b903c46b89153304d49ac2f31?t=311)
+
+![generated-image-at-00:05:11](https://loom.com/i/c93a9a5315f54b1ab30d7ca96ecc869b?workflows_screenshot=true)
+
+- Check the results to ensure they meet the specified conditions.
+
+### Cautionary Notes
+
+- Ensure that the event log is correctly formatted before uploading.
+- Double-check the logic connections between query components to avoid errors in results.
+
+### Tips for Efficiency
+
+- Use clear and descriptive names for queries to easily identify them later.
+- Regularly save your progress to avoid losing any changes.
+- Test queries incrementally to ensure accuracy.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.

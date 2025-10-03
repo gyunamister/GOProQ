@@ -445,12 +445,21 @@ class QueryConverter:
         activity_operator_str = act_comp_data.get("operator")
         activity_operator_enum = _convert_operator_string(activity_operator_str) if activity_operator_str else None
         
+        # Handle default values for cardinality queries
+        activity_type = act_comp_data.get("activityType", "single")
+        count = act_comp_data.get("count")
+        
+        # If activity type is cardinality but no operator/count provided, default to gte/1
+        if activity_type == "cardinality" and not activity_operator_enum and count is None:
+            activity_operator_enum = OperatorType.GTE
+            count = 1
+        
         activity_component = ServiceActivityComponent(
             activities=activities,
-            activity_type=act_comp_data.get("activityType", "single"),
+            activity_type=activity_type,
             quantifier=quantifier_enum,
             operator=activity_operator_enum,
-            count=act_comp_data.get("count")
+            count=count
         )
         
         return ActivityQuery(
