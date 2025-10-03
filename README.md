@@ -22,15 +22,6 @@
 *GOProQ's Modern Web Interface*
 
 ---
-
-## A User's Guide: Video
-<div class="sp-embed-player" data-id="cT6ejEnDHys">
-  <script src="https://go.screenpal.com/player/appearance/cT6ejEnDHys"></script>
-  <iframe width="100%" height="400" style="border:0;" scrolling="no" src="https://go.screenpal.com/player/cT6ejEnDHys?width=100%&height=400&ff=1&title=0" allowfullscreen="true"></iframe>
-</div>
-
-
-
 ## 🚀 Quick Start with Docker
 
 The fastest way to get GOProQ running is with Docker:
